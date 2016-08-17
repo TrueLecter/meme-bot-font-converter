@@ -1,0 +1,20 @@
+{
+  "name": "font-converter",
+  "version": "0.0.1",
+  "description": "TTF to BMFont converter for meme-bot",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TrueLecter/meme-bot-font-converter.git"
+  },
+  "author": "_TrueLecter_ <andrew.panassiouk@gmail.com> (http://minuette.ru)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TrueLecter/meme-bot-font-converter/issues"
+  },
+  "homepage": "https://github.com/TrueLecter/meme-bot-font-converter",
+  "dependencies": {
+    "deasync": "^0.1.7",
+    "fontpath": "0.0.6"
+  }
+}
