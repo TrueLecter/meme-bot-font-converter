@@ -2,6 +2,7 @@ var parse = require("fontpath/lib/index");
 var path = require("path"); 
 var fs = require("fs");
 var proc = require("child_process");
+var Promise = require('promise');
 
 exports.convert = function (dir, fontName, callback){
 	var clb = callback || function(){};
@@ -12,30 +13,38 @@ exports.convert = function (dir, fontName, callback){
   		size: 64,
   		charcodes: 'all' 
   	}
-  	var fontpathReady = false;
-  	var fontConverterReady = false;
   	var error = null;
 
-  	fs.readFile(ttf+".ttf", function(err, buffer) {
-		if (err) {
-			error = err;
-			fontpathReady = true;
-			return;
-		}
-		parse(buffer, fontpathOptions);
-		fontpathReady = true;
-	});
-  	var cmd = "java -jar \""+path.join(__dirname, "converter.jar") + "\" \""+fontName+"\""+" \""+path.join(__dirname, "chars.txt") + "\"";
-  	var converter = proc.exec(cmd, {cwd: dir}, function(err, stdout, stderr){
-		if (err){
-			error = err;
-		}
-		fontConverterReady = true;
-	});
+  	var fontpathPromise = new Promise (
+  		function (resolve, reject) {
+  			fs.readFile(ttf+".ttf", function(err, buffer) {
+				if (err) {
+					reject(err)
+				} else {
+					parse(buffer, fontpathOptions);
+					resolve(buffer);
+				}
+			});
+  	});
 
-	while(!fontpathReady && !fontConverterReady) {
-    	require('deasync').runLoopOnce();
-  	}
+  	var converterPromise = new Promise (
+  		function (resolve, reject){
+		  	var cmd = "java -jar \""+path.join(__dirname, "converter.jar") + "\" \""+fontName+"\""+" \""+path.join(__dirname, "chars.txt") + "\"";
+		  	var converter = proc.exec(cmd, {cwd: dir}, function(err, stdout, stderr){
+				if (err){
+					reject(err);
+				}
+				resolve(stdout);
+			});
+		}
+  	);
 
-  	callback(error, path.join(dir, fontName));
+  	Promise.all([fontpathPromise, converterPromise]).done(function(results){
+  		console.log("YAY");
+	  	callback(null, path.join(dir, fontName));
+  	}, function (err){
+	  	callback(err);
+  		console.log("SUK, pzdc", err);
+  	});
+  	//callback(error, path.join(dir, fontName));
 }
